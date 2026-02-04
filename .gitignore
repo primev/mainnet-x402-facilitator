@@ -1,0 +1,16 @@
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# API
+api/node_modules/
+api/dist/
+api/.vercel/
+
+# Env
+.env
+.env.local
+
+# OS
+.DS_Store

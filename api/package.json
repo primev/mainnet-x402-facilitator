@@ -1,0 +1,19 @@
+{
+  "name": "x402-facilitator-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "hono": "^4.4.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "vercel": "^39.0.0"
+  }
+}

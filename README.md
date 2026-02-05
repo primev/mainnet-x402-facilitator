@@ -1,48 +1,124 @@
 # Mainnet x402 Facilitator
 
-Gas-sponsored USDC transfers on Ethereum mainnet via ERC-20 permit signatures.
+x402-compliant payment facilitator for USDC on Ethereum mainnet. Implements the [x402 protocol](https://github.com/coinbase/x402) — verifies and settles EIP-3009 `transferWithAuthorization` signatures over HTTP.
 
-## Architecture
+## How x402 Works
 
-- **Facilitator.sol** — Accepts a USDC `permit` signature, transfers USDC from sender to recipient, and collects a gas fee in USDC
-- **Hono API** — Serverless API (Vercel) that estimates gas costs via Chainlink ETH/USD, constructs permit parameters, and relays transactions
+1. Client requests a paid resource from a server
+2. Server returns HTTP 402 with payment requirements
+3. Client signs a `transferWithAuthorization` (EIP-3009)
+4. Server forwards to this facilitator for verification and settlement
+5. Facilitator submits the transfer on-chain, paying gas on behalf of the payer
 
-## Contracts
+No custom contract is needed — the facilitator calls USDC's native `transferWithAuthorization` directly.
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/verify` | Verify a payment signature without settling |
+| `POST` | `/settle` | Verify and execute the payment on-chain |
+| `GET` | `/supported` | Return supported schemes and networks |
+
+### POST /verify
+
+```json
+{
+  "paymentPayload": {
+    "x402Version": 2,
+    "scheme": "exact",
+    "network": "eip155:1",
+    "payload": {
+      "signature": "0x...",
+      "authorization": {
+        "from": "0x...",
+        "to": "0x...",
+        "value": "1000000",
+        "validAfter": "0",
+        "validBefore": "1738800000",
+        "nonce": "0x..."
+      }
+    }
+  },
+  "paymentRequirements": {
+    "scheme": "exact",
+    "network": "eip155:1",
+    "amount": "1000000",
+    "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "payTo": "0x...",
+    "maxTimeoutSeconds": 60
+  }
+}
+```
+
+### POST /settle
+
+Same request body as `/verify`. Returns transaction hash on success.
+
+### GET /supported
+
+```json
+{
+  "kinds": [{ "x402Version": 2, "scheme": "exact", "network": "eip155:1" }],
+  "extensions": [],
+  "signers": { "eip155:*": ["0x...relayAddress"] }
+}
+```
+
+## Server Integration
+
+Any app using x402 middleware can point at this facilitator:
+
+```typescript
+import { paymentMiddleware } from "@x402/express";
+
+app.use(paymentMiddleware({
+  "GET /api/data": {
+    accepts: [{
+      scheme: "exact",
+      network: "eip155:1",
+      amount: "1000000",
+      asset: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      payTo: "0xYourAddress",
+      maxTimeoutSeconds: 60,
+    }],
+  },
+}, { facilitatorUrl: "https://your-facilitator.vercel.app" }));
+```
+
+## Development
+
+### Fork Tests
 
 ```bash
 cd contracts
-forge build
-forge test  # requires MAINNET_RPC_URL env var for fork testing
+MAINNET_RPC_URL=https://... forge test -vvv
 ```
 
-### Deploy
+Validates EIP-3009 `transferWithAuthorization` on a mainnet fork.
 
-```bash
-forge script script/Deploy.s.sol --rpc-url $MAINNET_RPC_URL --broadcast --verify
-```
-
-## API
+### API
 
 ```bash
 cd api
 npm install
-vercel dev    # local development
-vercel --prod # production deploy
+vercel dev
 ```
 
-### Env vars
+### Env Vars
 
 | Variable | Description |
 |----------|-------------|
-| `RELAY_PRIVATE_KEY` | Private key for the relay wallet that submits transactions |
+| `RELAY_PRIVATE_KEY` | Hot wallet private key for submitting settlement transactions |
 | `RPC_URL` | Ethereum mainnet RPC URL |
-| `FACILITATOR_ADDRESS` | Deployed Facilitator contract address |
 
-### Endpoints
+Set these in Vercel project settings (encrypted, never in source).
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/quote` | Get gas fee estimate and permit params |
-| `POST` | `/facilitate` | Submit a signed permit for facilitation |
-| `GET` | `/status/:txHash` | Check transaction status |
-| `GET` | `/health` | Relay wallet and contract health |
+## Deploy
+
+```bash
+cd api
+vercel --prod
+```
+
+Then set `RELAY_PRIVATE_KEY` and `RPC_URL` in Vercel environment variables. Fund the relay wallet with ETH for gas.

@@ -1,5 +1,3 @@
-import type { Address, Hex } from 'viem'
-
 export interface Authorization {
   from: string
   to: string

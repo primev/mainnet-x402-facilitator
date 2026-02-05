@@ -1,21 +1,22 @@
 # Project: mainnet-x402-facilitator
 
-x402-compliant payment facilitator for USDC on Ethereum mainnet (eip155:1).
+x402-compliant payment facilitator for USDC on Ethereum mainnet (eip155:1) with FastRPC preconfirmations.
 
 ## What This Is
 
-A serverless API (Hono on Vercel) that implements the x402 facilitator interface:
+A serverless API (Hono on Vercel) that lets AI agents pay for resources instantly:
 - `POST /verify` — verify EIP-3009 `transferWithAuthorization` signatures
-- `POST /settle` — verify + execute the transfer on-chain via relay wallet
+- `POST /settle` — verify + execute via FastRPC preconfirmation (~100-200ms)
 - `GET /supported` — declare supported schemes/networks
 
-No custom smart contract. Calls USDC's native `transferWithAuthorization` directly.
+No custom smart contract. Calls USDC's native `transferWithAuthorization` directly via FastRPC.
 
 ## Tech Stack
 
-- **API**: Hono + viem, deployed to Vercel as serverless function
-- **Chain interaction**: viem `publicClient` for reads, `walletClient` for settlement txs
-- **Tests**: Foundry fork tests against mainnet USDC (EIP-3009)
+- **API**: Hono + viem, deployed to Vercel
+- **Settlement**: FastRPC (`https://fastrpc.mev-commit.xyz`) for preconfirmations
+- **Reads**: Standard RPC for balance/nonce checks
+- **Tests**: Foundry fork tests against mainnet USDC
 - **Protocol**: x402 v2, scheme "exact", network "eip155:1"
 
 ## Key Files
@@ -24,12 +25,11 @@ No custom smart contract. Calls USDC's native `transferWithAuthorization` direct
 |------|---------|
 | `api/src/index.ts` | Hono route definitions |
 | `api/src/verify.ts` | EIP-712 sig verification, balance/nonce/time checks |
-| `api/src/settle.ts` | On-chain settlement, signature splitting |
+| `api/src/settle.ts` | FastRPC settlement with `maxPriorityFeePerGas: 0` |
 | `api/src/types.ts` | x402 protocol types (PaymentPayload, PaymentRequirements) |
-| `api/src/config.ts` | Env vars, USDC address, network constants |
+| `api/src/config.ts` | Env vars, USDC address, FastRPC URL |
 | `api/src/abi.ts` | USDC ABI (transferWithAuthorization, balanceOf, authorizationState) |
-| `api/api/index.ts` | Vercel serverless entry point |
-| `contracts/test/TransferWithAuth.t.sol` | Fork tests for EIP-3009 on mainnet USDC |
+| `contracts/test/TransferWithAuth.t.sol` | Fork tests for EIP-3009 |
 
 ## Commands
 
@@ -49,13 +49,21 @@ cd api && vercel --prod
 
 ## Env Vars (Vercel)
 
-- `RELAY_PRIVATE_KEY` — hot wallet private key (pays gas for settlements)
-- `RPC_URL` — Ethereum mainnet RPC
+- `RELAY_PRIVATE_KEY` — hot wallet private key (needs mev-commit gas tank funded)
+- `RPC_URL` — Ethereum mainnet RPC for reads
+
+## FastRPC Integration
+
+Settlement uses FastRPC for preconfirmations:
+- Endpoint: `https://fastrpc.mev-commit.xyz`
+- Requires `maxPriorityFeePerGas: 0` (fees handled by mev-commit gas tank)
+- Sub-200ms preconfirmation instead of 12+ second finality
+- Relay wallet must fund gas tank at mev-commit, not just hold ETH
 
 ## Important Details
 
 - USDC address: `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`
 - USDC EIP-712 domain: name="USD Coin", version="2", chainId=1
-- EIP-3009 uses `bytes32` nonces (not sequential), preventing replay without state reads
-- The relay wallet only needs ETH — it has no special on-chain permissions
-- `transferWithAuthorization` is permissionless: any address can submit a valid signature
+- EIP-3009 uses `bytes32` nonces (not sequential), client-generated
+- Agents sign authorizations, never need gas themselves
+- `transferWithAuthorization` is permissionless: any address can submit valid signature

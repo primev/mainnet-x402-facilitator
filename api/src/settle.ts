@@ -8,15 +8,32 @@ import {
 import { mainnet } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 import { usdcAbi } from './abi'
-import { RELAY_PRIVATE_KEY, RPC_URL, USDC_ADDRESS, NETWORK } from './config'
+import {
+  RELAY_PRIVATE_KEY,
+  RPC_URL,
+  USDC_ADDRESS,
+  NETWORK,
+  FASTRPC_URL,
+} from './config'
 import { verifyPayment } from './verify'
 import type { PaymentPayload, PaymentRequirements, SettleResponse } from './types'
 
 function getClients() {
-  const transport = http(RPC_URL())
   const account = privateKeyToAccount(RELAY_PRIVATE_KEY())
-  const publicClient = createPublicClient({ chain: mainnet, transport })
-  const walletClient = createWalletClient({ chain: mainnet, transport, account })
+
+  // Read client uses standard RPC for balance/nonce checks
+  const publicClient = createPublicClient({
+    chain: mainnet,
+    transport: http(RPC_URL()),
+  })
+
+  // Write client uses FastRPC for preconfirmed settlement
+  const walletClient = createWalletClient({
+    chain: mainnet,
+    transport: http(FASTRPC_URL),
+    account,
+  })
+
   return { publicClient, walletClient, account }
 }
 
@@ -52,17 +69,24 @@ export async function settlePayment(
   const validBefore = BigInt(authorization.validBefore)
   const nonce = authorization.nonce as Hex
 
-  const { publicClient, walletClient } = getClients()
+  const { publicClient, walletClient, account } = getClients()
 
   try {
+    // Get current gas price from standard RPC
+    const gasPrice = await publicClient.getGasPrice()
+
+    // Submit via FastRPC with maxPriorityFeePerGas: 0 (required for preconfirmations)
     const hash = await walletClient.writeContract({
       address: USDC_ADDRESS,
       abi: usdcAbi,
       functionName: 'transferWithAuthorization',
       args: [from, to, value, validAfter, validBefore, nonce, v, r, s],
+      maxFeePerGas: gasPrice,
+      maxPriorityFeePerGas: 0n,
     })
 
-    // Wait for confirmation
+    // Wait for preconfirmation receipt from FastRPC
+    // FastRPC returns receipt once all builders commit and proposer is opted in
     const receipt = await publicClient.waitForTransactionReceipt({ hash })
 
     if (receipt.status === 'reverted') {

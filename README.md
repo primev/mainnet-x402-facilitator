@@ -46,9 +46,11 @@ Agent                     Resource Server              Facilitator           Fas
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/verify` | Verify payment signature without settling |
-| `POST` | `/settle` | Verify + settle via FastRPC preconfirmation |
+| `POST` | `/settle` | Verify + settle payment (~100-200ms via FastRPC) |
+| `POST` | `/verify` | Verify only (dry run, no execution) |
 | `GET` | `/supported` | Return supported schemes and networks |
+
+> **Note:** `/settle` verifies internally before executing. Use `/verify` only if you need to check payment validity before doing expensive work.
 
 ### POST /verify
 
@@ -229,50 +231,9 @@ const signature = await walletClient.signTypedData({
 })
 ```
 
-#### Step 2: Verify Payment (Optional)
+#### Step 2: Settle Payment
 
-Check if the signature is valid before the resource server settles:
-
-```typescript
-const verifyResponse = await fetch('https://x402-facilitator-gold.vercel.app/verify', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    paymentPayload: {
-      x402Version: 2,
-      scheme: 'exact',
-      network: 'eip155:1',
-      payload: {
-        signature,
-        authorization: {
-          from: account.address,
-          to: payTo,
-          value: amount,
-          validAfter: '0',
-          validBefore: validBefore.toString(),
-          nonce,
-        },
-      },
-    },
-    paymentRequirements: {
-      scheme: 'exact',
-      network: 'eip155:1',
-      amount,
-      asset: USDC_ADDRESS,
-      payTo,
-      maxTimeoutSeconds: 60,
-    },
-  }),
-})
-
-const result = await verifyResponse.json()
-// { isValid: true, payer: "0x..." }
-// or { isValid: false, invalidReason: "insufficient_funds", payer: "0x..." }
-```
-
-#### Step 3: Settle Payment
-
-After the resource server performs work, it calls `/settle` to execute the transfer:
+Call `/settle` to verify and execute the payment in one call:
 
 ```typescript
 const settleResponse = await fetch('https://x402-facilitator-gold.vercel.app/settle', {
@@ -344,7 +305,10 @@ vercel --prod
 
 Set `RELAY_PRIVATE_KEY` and `RPC_URL` in Vercel environment variables.
 
-**Important:** Fund the relay wallet's [mev-commit gas tank](https://docs.primev.xyz/v1.1.0/get-started/fastrpc) for FastRPC preconfirmations.
+**FastRPC Gas:** The relay wallet needs its [mev-commit gas tank](https://docs.primev.xyz/v1.1.0/get-started/fastrpc) funded (separate from wallet ETH balance). Check status:
+```bash
+curl -s "https://mev-commit-api.primev.xyz/v1/account/YOUR_RELAY_ADDRESS"
+```
 
 ## Architecture
 

@@ -2,6 +2,7 @@
   "name": "x402-facilitator-api",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vercel dev",
     "build": "tsc",

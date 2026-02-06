@@ -6,6 +6,10 @@ import { settlePayment, getRelayAddress } from './settle.js'
 import { NETWORK } from './config.js'
 import type { VerifyRequest, SupportedResponse } from './types.js'
 
+export const config = {
+  runtime: 'edge',
+}
+
 const app = new Hono()
 
 app.use('/*', cors())

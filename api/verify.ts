@@ -6,9 +6,9 @@ import {
   type Hex,
 } from 'viem'
 import { mainnet } from 'viem/chains'
-import { usdcAbi } from './abi'
-import { USDC_ADDRESS, CHAIN_ID, NETWORK, RPC_URL } from './config'
-import type { PaymentPayload, PaymentRequirements, VerifyResponse } from './types'
+import { usdcAbi } from './abi.js'
+import { USDC_ADDRESS, CHAIN_ID, NETWORK, RPC_URL } from './config.js'
+import type { PaymentPayload, PaymentRequirements, VerifyResponse } from './types.js'
 
 function getPublicClient() {
   return createPublicClient({

@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "build": "tsc",
     "deploy": "vercel --prod"
   },
   "dependencies": {

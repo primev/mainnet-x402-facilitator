@@ -23,12 +23,12 @@ No custom smart contract. Calls USDC's native `transferWithAuthorization` direct
 
 | File | Purpose |
 |------|---------|
-| `api/src/index.ts` | Hono route definitions |
-| `api/src/verify.ts` | EIP-712 sig verification, balance/nonce/time checks |
-| `api/src/settle.ts` | FastRPC settlement with `maxPriorityFeePerGas: 0` |
-| `api/src/types.ts` | x402 protocol types (PaymentPayload, PaymentRequirements) |
-| `api/src/config.ts` | Env vars, USDC address, FastRPC URL |
-| `api/src/abi.ts` | USDC ABI (transferWithAuthorization, balanceOf, authorizationState) |
+| `api/index.ts` | Hono routes + Vercel handler |
+| `api/verify.ts` | EIP-712 sig verification, balance/nonce/time checks |
+| `api/settle.ts` | FastRPC settlement with `maxPriorityFeePerGas: 0` |
+| `api/types.ts` | x402 protocol types (PaymentPayload, PaymentRequirements) |
+| `api/config.ts` | Env vars, USDC address, FastRPC URL |
+| `api/abi.ts` | USDC ABI (transferWithAuthorization, balanceOf, authorizationState) |
 | `contracts/test/TransferWithAuth.t.sol` | Fork tests for EIP-3009 |
 
 ## Commands

@@ -7,16 +7,16 @@ import {
 } from 'viem'
 import { mainnet } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { usdcAbi } from './abi'
+import { usdcAbi } from './abi.js'
 import {
   RELAY_PRIVATE_KEY,
   RPC_URL,
   USDC_ADDRESS,
   NETWORK,
   FASTRPC_URL,
-} from './config'
-import { verifyPayment } from './verify'
-import type { PaymentPayload, PaymentRequirements, SettleResponse } from './types'
+} from './config.js'
+import { verifyPayment } from './verify.js'
+import type { PaymentPayload, PaymentRequirements, SettleResponse } from './types.js'
 
 function getClients() {
   const account = privateKeyToAccount(RELAY_PRIVATE_KEY())

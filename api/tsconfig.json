@@ -5,11 +5,8 @@
     "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "outDir": "dist",
-    "rootDir": ".",
-    "declaration": true
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "api/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["*.ts"],
+  "exclude": ["node_modules"]
 }

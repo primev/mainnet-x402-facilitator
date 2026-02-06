@@ -1,13 +1,18 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { verifyPayment } from './verify'
-import { settlePayment, getRelayAddress } from './settle'
-import { NETWORK } from './config'
-import type { VerifyRequest, SupportedResponse } from './types'
+import { handle } from 'hono/vercel'
+import { verifyPayment } from './verify.js'
+import { settlePayment, getRelayAddress } from './settle.js'
+import { NETWORK } from './config.js'
+import type { VerifyRequest, SupportedResponse } from './types.js'
 
 const app = new Hono()
 
 app.use('/*', cors())
+
+app.get('/', (c) => {
+  return c.json({ message: 'x402 facilitator api' })
+})
 
 app.post('/verify', async (c) => {
   const body = (await c.req.json()) as VerifyRequest
@@ -38,17 +43,26 @@ app.post('/settle', async (c) => {
 })
 
 app.get('/supported', (c) => {
-  const relayAddress = getRelayAddress()
-  const response: SupportedResponse = {
-    kinds: [
-      { x402Version: 2, scheme: 'exact', network: NETWORK },
-    ],
-    extensions: [],
-    signers: {
-      'eip155:*': [relayAddress],
-    },
+  try {
+    const relayAddress = getRelayAddress()
+    const response: SupportedResponse = {
+      kinds: [
+        { x402Version: 2, scheme: 'exact', network: NETWORK },
+      ],
+      extensions: [],
+      signers: {
+        'eip155:*': [relayAddress],
+      },
+    }
+    return c.json(response)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ error: message }, 500)
   }
-  return c.json(response)
 })
 
-export default app
+app.get('/health', (c) => {
+  return c.json({ status: 'healthy' })
+})
+
+export default handle(app)

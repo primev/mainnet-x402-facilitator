@@ -10,7 +10,7 @@ AI agents need to pay for APIs, compute, and data in real-time. Traditional bloc
 2. Settles payments via FastRPC preconfirmations (~100-200ms)
 3. Agents get instant access to paid resources without waiting for block confirmation
 
-No gas required for agents — they just sign authorizations. The facilitator pays gas via the mev-commit network.
+No gas required for agents — they just sign authorizations. Gas is sponsored by mev-commit. **Zero fees** — fully x402 compatible.
 
 ## How It Works
 
@@ -266,11 +266,12 @@ const result = await settleResponse.json()
 
 ### Key Points
 
-- **No gas needed:** Agents sign authorizations, the facilitator pays gas via mev-commit
+- **Zero fees:** Agents pay exactly the requested amount — no extra fees
+- **No gas needed:** Agents sign authorizations, gas is sponsored by mev-commit
 - **Instant settlement:** FastRPC preconfirmations complete in ~100-200ms
+- **x402 compatible:** Works with standard x402 client libraries
 - **USDC only:** This facilitator only supports USDC on Ethereum mainnet
 - **Random nonces:** Generate a new random `bytes32` nonce for each payment
-- **Time windows:** Set reasonable `validBefore` (e.g., 15 minutes from now)
 
 ## Development
 
@@ -293,7 +294,7 @@ vercel dev
 
 | Variable | Description |
 |----------|-------------|
-| `RELAY_PRIVATE_KEY` | Hot wallet for settlement txs (needs gas tank funded) |
+| `RELAY_PRIVATE_KEY` | Hot wallet for settlement txs |
 | `RPC_URL` | Ethereum mainnet RPC for reads |
 
 ## Deploy
@@ -305,10 +306,7 @@ vercel --prod
 
 Set `RELAY_PRIVATE_KEY` and `RPC_URL` in Vercel environment variables.
 
-**FastRPC Gas:** The relay wallet needs its [mev-commit gas tank](https://docs.primev.xyz/v1.1.0/get-started/fastrpc) funded (separate from wallet ETH balance). Check status:
-```bash
-curl -s "https://mev-commit-api.primev.xyz/v1/account/YOUR_RELAY_ADDRESS"
-```
+> **Note:** Gas for FastRPC preconfirmations is sponsored by mev-commit — no gas tank funding required.
 
 ## Architecture
 

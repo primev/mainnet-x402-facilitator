@@ -21,13 +21,12 @@ import type { PaymentPayload, PaymentRequirements, SettleResponse } from './type
 function getClients() {
   const account = privateKeyToAccount(RELAY_PRIVATE_KEY())
 
-  // Read client uses standard RPC for balance/nonce checks
   const publicClient = createPublicClient({
     chain: mainnet,
     transport: http(RPC_URL()),
   })
 
-  // Write client uses FastRPC for preconfirmed settlement
+  // FastRPC for preconfirmed settlement (gas covered by mev-commit)
   const walletClient = createWalletClient({
     chain: mainnet,
     transport: http(FASTRPC_URL),
@@ -69,13 +68,12 @@ export async function settlePayment(
   const validBefore = BigInt(authorization.validBefore)
   const nonce = authorization.nonce as Hex
 
-  const { publicClient, walletClient, account } = getClients()
+  const { publicClient, walletClient } = getClients()
 
   try {
-    // Get current gas price from standard RPC
     const gasPrice = await publicClient.getGasPrice()
 
-    // Submit via FastRPC with maxPriorityFeePerGas: 0 (required for preconfirmations)
+    // Submit via FastRPC with maxPriorityFeePerGas: 0 (gas covered by mev-commit)
     const hash = await walletClient.writeContract({
       address: USDC_ADDRESS,
       abi: usdcAbi,
@@ -85,8 +83,6 @@ export async function settlePayment(
       maxPriorityFeePerGas: 0n,
     })
 
-    // Wait for preconfirmation receipt from FastRPC
-    // FastRPC returns receipt once all builders commit and proposer is opted in
     const receipt = await publicClient.waitForTransactionReceipt({ hash })
 
     if (receipt.status === 'reverted') {

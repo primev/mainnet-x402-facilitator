@@ -7,7 +7,9 @@ x402-compliant payment facilitator for USDC on Ethereum mainnet (eip155:1) with 
 A serverless API (Hono on Vercel) that lets AI agents pay for resources instantly:
 - `POST /verify` — verify EIP-3009 `transferWithAuthorization` signatures
 - `POST /settle` — verify + execute via FastRPC preconfirmation (~100-200ms)
-- `GET /supported` — declare supported schemes/networks
+- `GET /supported` — declare supported schemes/networks + bazaar extension
+- `GET /discovery/resources` — bazaar resource catalog endpoint
+- `GET /agent.json` — ERC-8004 agent metadata (on-chain URI target)
 
 No custom smart contract. Calls USDC's native `transferWithAuthorization` directly via FastRPC.
 
@@ -29,6 +31,8 @@ No custom smart contract. Calls USDC's native `transferWithAuthorization` direct
 | `api/types.ts` | x402 protocol types (PaymentPayload, PaymentRequirements) |
 | `api/config.ts` | Env vars, USDC address, FastRPC URL |
 | `api/abi.ts` | USDC ABI (transferWithAuthorization, balanceOf, authorizationState) |
+| `api/register-erc8004.ts` | Script to register on ERC-8004 Identity Registry |
+| `agent-metadata.json` | Static copy of agent metadata |
 | `contracts/test/TransferWithAuth.t.sol` | Fork tests for EIP-3009 |
 
 ## Commands
@@ -45,6 +49,9 @@ cd api && vercel dev
 
 # Deploy
 cd api && vercel --prod
+
+# Register on ERC-8004 (already done — Agent #23175)
+cd api && RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx register-erc8004.ts
 ```
 
 ## Env Vars (Vercel)
@@ -67,3 +74,34 @@ Settlement uses FastRPC for preconfirmations:
 - EIP-3009 uses `bytes32` nonces (not sequential), client-generated
 - Agents sign authorizations, never need gas themselves
 - `transferWithAuthorization` is permissionless: any address can submit valid signature
+- Relay wallet: `0x488d87a9A88a6A878B3E7cf0bEece8984af9518D`
+
+## Registry Status
+
+| Registry | Status | Reference |
+|----------|--------|-----------|
+| **ERC-8004 Identity** | Registered — Agent #23175 | [Etherscan NFT](https://etherscan.io/nft/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432/23175), [Tx](https://etherscan.io/tx/0xcfb8619663c3da8337aea5b9868bc7067ec4db2c26132141dce83819caa05415) |
+| **x402 Ecosystem** (coinbase/x402) | PR submitted | [PR #1114](https://github.com/coinbase/x402/pull/1114) |
+| **x402scan Explorer** (Merit-Systems/x402scan) | PR submitted | [PR #624](https://github.com/Merit-Systems/x402scan/pull/624) |
+| **x402 Bazaar** | Enabled | `/supported` declares bazaar, `/discovery/resources` live |
+
+## Next Steps
+
+### Short-term
+- Monitor x402 ecosystem PR #1114 and x402scan PR #624 for reviewer feedback
+- Fund relay wallet gas tank if ETH runs low (~0.01 ETH remaining)
+
+### Medium-term — Visibility & Trust
+- **ERC-8004 Reputation Registry** — solicit feedback signals from early users/agents to build on-chain reputation for Agent #23175
+- **ERC-8004 Validation Registry** — request validation from a third-party validator (e.g., TEE oracle or manual audit) to get a verified badge
+- **Bazaar catalog persistence** — add a database (Supabase or KV store) to persist discovered resources in `/discovery/resources` as resource servers transact through the facilitator
+
+### Growth — Expand Reach
+- **Multi-chain** — extend the facilitator to Base (largest x402 market by volume) using the same FastRPC preconfirmation pattern, instantly multiplying the addressable agent pool
+- **Integration guides** — publish a "Pay with Primev" quickstart showing how agents/resource servers wire up the facilitator (SDK snippet, curl examples)
+- **Agent SDK compatibility** — ensure the facilitator works out-of-the-box with popular agent frameworks (Agent0 SDK, Daydreams, x402 client libraries)
+
+### Longer-term — Differentiation
+- **Preconfirmation proofs** — attach mev-commit preconfirmation receipts to x402 settle responses, giving agents cryptographic proof of settlement before block finality
+- **Gas sponsorship dashboard** — expose relay wallet gas tank status and settlement metrics via a public dashboard
+- **Batch settlement** — aggregate multiple agent payments into a single transaction for even lower overhead

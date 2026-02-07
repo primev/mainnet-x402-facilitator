@@ -53,7 +53,7 @@ app.get('/supported', (c) => {
       kinds: [
         { x402Version: 2, scheme: 'exact', network: NETWORK },
       ],
-      extensions: [],
+      extensions: ['bazaar'],
       signers: {
         'eip155:*': [relayAddress],
       },
@@ -67,6 +67,17 @@ app.get('/supported', (c) => {
 
 app.get('/health', (c) => {
   return c.json({ status: 'healthy' })
+})
+
+app.get('/discovery/resources', (c) => {
+  const limit = Number(c.req.query('limit') || 100)
+  const offset = Number(c.req.query('offset') || 0)
+  return c.json({
+    resources: [],
+    total: 0,
+    limit,
+    offset,
+  })
 })
 
 app.get('/agent.json', (c) => {

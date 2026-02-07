@@ -2,8 +2,10 @@ import {
   createPublicClient,
   createWalletClient,
   http,
+  encodeFunctionData,
   type Address,
   type Hex,
+  type TransactionReceipt,
 } from 'viem'
 import { mainnet } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
@@ -26,10 +28,10 @@ function getClients() {
     transport: http(RPC_URL()),
   })
 
-  // Use regular RPC for now (FastRPC requires mev-commit gas tank setup)
+  // FastRPC for preconfirmed settlement (priority fees covered by mev-commit)
   const walletClient = createWalletClient({
     chain: mainnet,
-    transport: http(RPC_URL()),
+    transport: http(FASTRPC_URL),
     account,
   })
 
@@ -42,6 +44,32 @@ function splitSignature(signature: string): { v: number; r: Hex; s: Hex } {
   const s = `0x${sig.slice(64, 128)}` as Hex
   const v = parseInt(sig.slice(128, 130), 16)
   return { v, r, s }
+}
+
+// Call eth_sendRawTransactionSync for synchronous preconfirmation + receipt
+async function sendRawTransactionSync(signedTx: Hex): Promise<TransactionReceipt> {
+  const response = await fetch(FASTRPC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'eth_sendRawTransactionSync',
+      params: [signedTx],
+    }),
+  })
+
+  const result = await response.json()
+
+  if (result.error) {
+    // Error code 4 = timeout but tx in mempool
+    if (result.error.code === 4 && result.error.data) {
+      throw new Error(`Transaction timeout, hash: ${result.error.data}`)
+    }
+    throw new Error(result.error.message || 'Transaction failed')
+  }
+
+  return result.result as TransactionReceipt
 }
 
 export async function settlePayment(
@@ -68,25 +96,55 @@ export async function settlePayment(
   const validBefore = BigInt(authorization.validBefore)
   const nonce = authorization.nonce as Hex
 
-  const { publicClient, walletClient } = getClients()
+  const { publicClient, walletClient, account } = getClients()
 
   try {
-    const gasPrice = await publicClient.getGasPrice()
+    const [gasPrice, relayNonce] = await Promise.all([
+      publicClient.getGasPrice(),
+      publicClient.getTransactionCount({ address: account.address }),
+    ])
 
-    // Submit via FastRPC with maxPriorityFeePerGas: 0 (gas covered by mev-commit)
-    const hash = await walletClient.writeContract({
-      address: USDC_ADDRESS,
+    // Encode transferWithAuthorization call
+    const data = encodeFunctionData({
       abi: usdcAbi,
       functionName: 'transferWithAuthorization',
       args: [from, to, value, validAfter, validBefore, nonce, v, r, s],
     })
 
-    // Return immediately - don't wait for receipt (FastRPC preconfirmation is ~100-200ms)
-    // The tx hash can be used to check status if needed
+    // Prepare and sign the transaction
+    const signedTx = await walletClient.signTransaction({
+      account,
+      to: USDC_ADDRESS,
+      data,
+      nonce: relayNonce,
+      gas: BigInt(120000),
+      maxFeePerGas: gasPrice,
+      maxPriorityFeePerGas: BigInt(0), // mev-commit covers priority fees
+      chainId: mainnet.id,
+    })
+
+    // Submit via eth_sendRawTransactionSync - returns receipt synchronously
+    const receipt = await sendRawTransactionSync(signedTx)
+
+    // Handle both raw RPC format (0x1/0x0) and viem format (success/reverted)
+    const status = String(receipt.status)
+    const isSuccess = status === 'success' || status === '0x1'
+    const txHash = receipt.transactionHash
+
+    if (!isSuccess) {
+      return {
+        success: false,
+        error: 'transaction_reverted',
+        payer: from,
+        transaction: txHash,
+        network: NETWORK,
+      }
+    }
+
     return {
       success: true,
       payer: from,
-      transaction: hash,
+      transaction: txHash,
       network: NETWORK,
     }
   } catch (err: unknown) {

@@ -72,10 +72,22 @@ export async function settlePayment(
   const { publicClient, walletClient, account } = getClients()
 
   try {
-    const [gasPrice, relayNonce] = await Promise.all([
+    // Get gas price from L1, but nonce from FastRPC (includes pending txs in mev-commit mempool)
+    const [gasPrice, nonceResponse] = await Promise.all([
       publicClient.getGasPrice(),
-      publicClient.getTransactionCount({ address: account.address }),
+      fetch(FASTRPC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'eth_getTransactionCount',
+          params: [account.address, 'pending'],
+        }),
+      }).then((r) => r.json()),
     ])
+
+    const relayNonce = parseInt(nonceResponse.result, 16)
 
     // Encode transferWithAuthorization call
     const data = encodeFunctionData({

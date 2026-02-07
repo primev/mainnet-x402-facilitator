@@ -32,6 +32,7 @@ No custom smart contract. Calls USDC's native `transferWithAuthorization` direct
 | `api/config.ts` | Env vars, USDC address, FastRPC URL |
 | `api/abi.ts` | USDC ABI (transferWithAuthorization, balanceOf, authorizationState) |
 | `api/register-erc8004.ts` | Script to register on ERC-8004 Identity Registry |
+| `api/update-metadata.ts` | Script to update ERC-8004 metadata for Agent #23175 |
 | `agent-metadata.json` | Static copy of agent metadata |
 | `contracts/test/TransferWithAuth.t.sol` | Fork tests for EIP-3009 |
 
@@ -52,6 +53,11 @@ cd api && vercel --prod
 
 # Register on ERC-8004 (already done — Agent #23175)
 cd api && RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx register-erc8004.ts
+
+# Update ERC-8004 metadata (edit METADATA values in script first)
+cd api && RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx update-metadata.ts
+# Or update specific keys only:
+cd api && RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx update-metadata.ts settlement_count avg_latency_ms
 ```
 
 ## Env Vars (Vercel)
@@ -86,6 +92,10 @@ Settlement uses FastRPC for preconfirmations:
 | **x402 Bazaar** | Enabled | `/supported` declares bazaar, `/discovery/resources` live |
 
 ## Next Steps
+
+### TODO — ERC-8004 Metadata Update
+- [ ] Run `update-metadata.ts` to write reputation fields to Agent #23175 on-chain (edit METADATA values with current settlement stats first, then run — costs ~6 mainnet txs)
+- [ ] Verify fields display on 8004agents.ai after on-chain update
 
 ### Short-term
 - Monitor x402 ecosystem PR #1114 and x402scan PR #624 for reviewer feedback

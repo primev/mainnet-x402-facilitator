@@ -47,6 +47,10 @@ export interface SettleResponse {
   transaction?: string
   network?: string
   error?: string
+  facilitator?: {
+    agentId: number
+    reputation: string
+  }
 }
 
 export interface SupportedResponse {

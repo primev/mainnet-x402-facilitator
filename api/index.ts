@@ -14,12 +14,26 @@ const app = new Hono()
 
 app.use('/*', cors())
 
+// Global error handler for malformed requests
+app.onError((err, c) => {
+  if (err instanceof SyntaxError) {
+    return c.json({ error: 'invalid_json' }, 400)
+  }
+  return c.json({ error: 'internal_error' }, 500)
+})
+
 app.get('/', (c) => {
   return c.json({ message: 'x402 facilitator api' })
 })
 
 app.post('/verify', async (c) => {
-  const body = (await c.req.json()) as VerifyRequest
+  let body: VerifyRequest
+  try {
+    body = (await c.req.json()) as VerifyRequest
+  } catch {
+    return c.json({ isValid: false, invalidReason: 'invalid_json' }, 400)
+  }
+
   const { paymentPayload, paymentRequirements } = body
 
   if (!paymentPayload || !paymentRequirements) {
@@ -34,7 +48,13 @@ app.post('/verify', async (c) => {
 })
 
 app.post('/settle', async (c) => {
-  const body = (await c.req.json()) as VerifyRequest
+  let body: VerifyRequest
+  try {
+    body = (await c.req.json()) as VerifyRequest
+  } catch {
+    return c.json({ success: false, error: 'invalid_json' }, 400)
+  }
+
   const { paymentPayload, paymentRequirements } = body
 
   if (!paymentPayload || !paymentRequirements) {
@@ -70,8 +90,10 @@ app.get('/health', (c) => {
 })
 
 app.get('/discovery/resources', (c) => {
-  const limit = Number(c.req.query('limit') || 100)
-  const offset = Number(c.req.query('offset') || 0)
+  const rawLimit = Number(c.req.query('limit') || 100)
+  const rawOffset = Number(c.req.query('offset') || 0)
+  const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(rawLimit, 1000)) : 100
+  const offset = Number.isFinite(rawOffset) ? Math.max(0, rawOffset) : 0
   return c.json({
     resources: [],
     total: 0,
@@ -107,6 +129,12 @@ app.get('/agent.json', (c) => {
         name: 'Primev',
         website: 'https://primev.xyz',
         infrastructure: 'https://mev-commit.xyz',
+      },
+      erc8004: {
+        identityRegistry: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+        reputationRegistry: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
+        agentId: 23175,
+        network: 'eip155:1',
       },
       relayAddress,
     })

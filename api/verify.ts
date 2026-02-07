@@ -10,6 +10,13 @@ import { usdcAbi } from './abi.js'
 import { USDC_ADDRESS, CHAIN_ID, NETWORK, RPC_URL } from './config.js'
 import type { PaymentPayload, PaymentRequirements, VerifyResponse } from './types.js'
 
+const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/
+const HEX_RE = /^0x[0-9a-fA-F]+$/
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+// Safety buffer: reject if authorization expires within 60 seconds
+// to account for clock drift between server and block.timestamp
+const TIME_BUFFER_SECONDS = 60n
+
 function getPublicClient() {
   return createPublicClient({
     chain: mainnet,
@@ -52,18 +59,48 @@ export async function verifyPayment(
     return { isValid: false, invalidReason: 'unsupported_network' }
   }
 
+  // Check network consistency between payload and requirements
+  if (paymentPayload.network !== paymentRequirements.network) {
+    return { isValid: false, invalidReason: 'network_mismatch' }
+  }
+
   // Check asset
   if (paymentRequirements.asset.toLowerCase() !== USDC_ADDRESS.toLowerCase()) {
     return { isValid: false, invalidReason: 'unsupported_asset' }
   }
 
+  // Validate input formats before casting
+  if (!ADDRESS_RE.test(authorization.from)) {
+    return { isValid: false, invalidReason: 'invalid_from_address' }
+  }
+  if (!ADDRESS_RE.test(authorization.to)) {
+    return { isValid: false, invalidReason: 'invalid_to_address' }
+  }
+  if (!HEX_RE.test(authorization.nonce)) {
+    return { isValid: false, invalidReason: 'invalid_nonce_format' }
+  }
+
   const from = authorization.from as Address
   const to = authorization.to as Address
-  const value = BigInt(authorization.value)
-  const validAfter = BigInt(authorization.validAfter)
-  const validBefore = BigInt(authorization.validBefore)
   const nonce = authorization.nonce as Hex
-  const requiredAmount = BigInt(paymentRequirements.amount)
+
+  // Check for zero address
+  if (from === ZERO_ADDRESS) {
+    return { isValid: false, invalidReason: 'from_is_zero_address', payer: from }
+  }
+
+  let value: bigint
+  let validAfter: bigint
+  let validBefore: bigint
+  let requiredAmount: bigint
+  try {
+    value = BigInt(authorization.value)
+    validAfter = BigInt(authorization.validAfter)
+    validBefore = BigInt(authorization.validBefore)
+    requiredAmount = BigInt(paymentRequirements.amount)
+  } catch {
+    return { isValid: false, invalidReason: 'invalid_numeric_field', payer: from }
+  }
 
   // Check authorization.to matches paymentRequirements.payTo
   if (to.toLowerCase() !== paymentRequirements.payTo.toLowerCase()) {
@@ -83,7 +120,7 @@ export async function verifyPayment(
     }
   }
 
-  // Check time window
+  // Check time window with safety buffer for clock drift vs block.timestamp
   const now = BigInt(Math.floor(Date.now() / 1000))
   if (now < validAfter) {
     return {
@@ -92,7 +129,7 @@ export async function verifyPayment(
       payer: from,
     }
   }
-  if (now >= validBefore) {
+  if (now + TIME_BUFFER_SECONDS >= validBefore) {
     return {
       isValid: false,
       invalidReason: 'authorization_expired',
@@ -133,16 +170,23 @@ export async function verifyPayment(
     }
   }
 
-  // Check on-chain state
+  // Check on-chain state — parallelize independent reads
   const client = getPublicClient()
 
-  // Check balance
-  const balance = await client.readContract({
-    address: USDC_ADDRESS,
-    abi: usdcAbi,
-    functionName: 'balanceOf',
-    args: [from],
-  })
+  const [balance, nonceUsed] = await Promise.all([
+    client.readContract({
+      address: USDC_ADDRESS,
+      abi: usdcAbi,
+      functionName: 'balanceOf',
+      args: [from],
+    }),
+    client.readContract({
+      address: USDC_ADDRESS,
+      abi: usdcAbi,
+      functionName: 'authorizationState',
+      args: [from, nonce],
+    }),
+  ])
 
   if (balance < value) {
     return {
@@ -151,14 +195,6 @@ export async function verifyPayment(
       payer: from,
     }
   }
-
-  // Check nonce hasn't been used
-  const nonceUsed = await client.readContract({
-    address: USDC_ADDRESS,
-    abi: usdcAbi,
-    functionName: 'authorizationState',
-    args: [from, nonce],
-  })
 
   if (nonceUsed) {
     return {

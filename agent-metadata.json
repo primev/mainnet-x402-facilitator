@@ -28,5 +28,11 @@
     "website": "https://primev.xyz",
     "infrastructure": "https://mev-commit.xyz"
   },
+  "erc8004": {
+    "identityRegistry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    "reputationRegistry": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    "agentId": 23175,
+    "network": "eip155:1"
+  },
   "relayAddress": "0x488d87a9A88a6A878B3E7cf0bEece8984af9518D"
 }

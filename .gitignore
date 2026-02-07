@@ -12,5 +12,8 @@ api/.vercel/
 .env
 .env.local
 
+# Test files with secrets
+**/RealTest*
+
 # OS
 .DS_Store

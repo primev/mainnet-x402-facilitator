@@ -142,7 +142,7 @@ app.use(paymentMiddleware({
       maxTimeoutSeconds: 60,
     }],
   },
-}, { facilitatorUrl: "https://your-facilitator.vercel.app" }));
+}, { facilitatorUrl: "https://x402-facilitator-gold.vercel.app" }));
 ```
 
 ## Agent Usage Guide

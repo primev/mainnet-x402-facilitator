@@ -1,0 +1,32 @@
+{
+  "name": "Primev FastRPC Facilitator",
+  "description": "Fee-free x402 payment facilitator on Ethereum mainnet. Sub-200ms USDC settlement via mev-commit FastRPC preconfirmations using EIP-3009 transferWithAuthorization.",
+  "version": "1.0.0",
+  "type": "facilitator",
+  "protocol": "x402",
+  "x402": {
+    "version": 2,
+    "scheme": "exact",
+    "network": "eip155:1",
+    "baseUrl": "https://x402-facilitator-gold.vercel.app",
+    "endpoints": {
+      "verify": "/verify",
+      "settle": "/settle",
+      "supported": "/supported",
+      "health": "/health"
+    },
+    "assets": ["USDC"],
+    "settlement": {
+      "method": "FastRPC",
+      "provider": "mev-commit",
+      "latency": "~100-200ms"
+    },
+    "fees": "0"
+  },
+  "operator": {
+    "name": "Primev",
+    "website": "https://primev.xyz",
+    "infrastructure": "https://mev-commit.xyz"
+  },
+  "relayAddress": "0x488d87a9A88a6A878B3E7cf0bEece8984af9518D"
+}

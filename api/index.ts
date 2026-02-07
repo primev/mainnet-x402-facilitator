@@ -69,4 +69,40 @@ app.get('/health', (c) => {
   return c.json({ status: 'healthy' })
 })
 
+app.get('/agent.json', (c) => {
+  try {
+    const relayAddress = getRelayAddress()
+    return c.json({
+      name: 'Primev FastRPC Facilitator',
+      description: 'Fee-free x402 payment facilitator on Ethereum mainnet. Sub-200ms USDC settlement via mev-commit FastRPC preconfirmations using EIP-3009 transferWithAuthorization.',
+      version: '1.0.0',
+      type: 'facilitator',
+      protocol: 'x402',
+      x402: {
+        version: 2,
+        scheme: 'exact',
+        network: NETWORK,
+        baseUrl: 'https://x402-facilitator-gold.vercel.app',
+        endpoints: {
+          verify: '/verify',
+          settle: '/settle',
+          supported: '/supported',
+          health: '/health',
+        },
+        assets: ['USDC'],
+        fees: '0',
+      },
+      operator: {
+        name: 'Primev',
+        website: 'https://primev.xyz',
+        infrastructure: 'https://mev-commit.xyz',
+      },
+      relayAddress,
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ error: message }, 500)
+  }
+})
+
 export default handle(app)

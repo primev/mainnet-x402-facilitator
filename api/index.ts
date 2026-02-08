@@ -115,7 +115,7 @@ app.get('/agent.json', (c) => {
         version: 2,
         scheme: 'exact',
         network: NETWORK,
-        baseUrl: 'https://x402-facilitator-gold.vercel.app',
+        baseUrl: 'https://facilitator.primev.xyz',
         endpoints: {
           verify: '/verify',
           settle: '/settle',

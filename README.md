@@ -19,7 +19,7 @@ AI agents need to pay for APIs, compute, and data in real-time. Traditional Ethe
 ## Live API
 
 ```
-https://x402-facilitator-gold.vercel.app
+https://facilitator.primev.xyz
 ```
 
 | Endpoint | Description |
@@ -79,7 +79,7 @@ import { mainnet } from 'viem/chains'
 import { randomBytes } from 'crypto'
 
 const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-const FACILITATOR = 'https://x402-facilitator-gold.vercel.app'
+const FACILITATOR = 'https://facilitator.primev.xyz'
 
 // Sign EIP-3009 authorization
 const signature = await walletClient.signTypedData({
@@ -131,7 +131,7 @@ app.use(paymentMiddleware({
       maxTimeoutSeconds: 60,
     }],
   },
-}, { facilitatorUrl: "https://x402-facilitator-gold.vercel.app" }));
+}, { facilitatorUrl: "https://facilitator.primev.xyz" }));
 ```
 
 ## Error Codes
@@ -177,9 +177,26 @@ api/
 └── abi.ts        # USDC ABI
 ```
 
+## Registry & Ecosystem Listings
+
+| Registry | Status | Link |
+|----------|--------|------|
+| **ERC-8004 Identity** | Registered — Agent #23175 | [Etherscan NFT](https://etherscan.io/nft/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432/23175) |
+| **x402 Ecosystem** (coinbase/x402) | PR open | [PR #1114](https://github.com/coinbase/x402/pull/1114) |
+| **x402scan Explorer** (Merit-Systems) | PR open | [PR #624](https://github.com/Merit-Systems/x402scan/pull/624) |
+| **awesome-x402** (xpaysh) | PR open | [PR #11](https://github.com/xpaysh/awesome-x402/pull/11) |
+| **awesome-x402** (Merit-Systems) | PR open | [PR #29](https://github.com/Merit-Systems/awesome-x402/pull/29) |
+| **awesome-erc8004** | PR open | [PR #3](https://github.com/sudeepb02/awesome-erc8004/pull/3) |
+| **x402.watch Directory** | Pending — Ethereum mainnet not yet supported | [x402.watch](https://x402.watch/facilitators) |
+| **x402 Bazaar** | Live | `/supported` + `/discovery/resources` |
+
+> **Note:** x402.watch currently only lists facilitators on Base, Polygon, and Solana. Ethereum mainnet support has been requested — once added, this facilitator will be listed as "Primev – Ethereum Mainnet with Preconfs" at `https://facilitator.primev.xyz`.
+
 ## Links
 
 - [x402 Protocol](https://github.com/coinbase/x402)
 - [Primev FastRPC](https://docs.primev.xyz/v1.1.0/get-started/fastrpc)
 - [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009)
 - [mev-commit](https://docs.primev.xyz/)
+- [x402.watch Facilitator Directory](https://x402.watch/facilitators)
+- [8004agents.ai Explorer](https://8004agents.ai)

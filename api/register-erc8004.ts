@@ -11,7 +11,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 
 const IDENTITY_REGISTRY = '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432' as const;
 
-const AGENT_URI = 'https://x402-facilitator-gold.vercel.app/agent.json';
+const AGENT_URI = 'https://facilitator.primev.xyz/agent.json';
 
 const IDENTITY_REGISTRY_ABI = parseAbi([
   'function register(string agentURI, (string metadataKey, bytes metadataValue)[] metadata) external returns (uint256 agentId)',

@@ -4,7 +4,7 @@ import { mainnet } from 'viem/chains'
 import { randomBytes } from 'crypto'
 
 const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-const FACILITATOR_URL = 'https://x402-facilitator-gold.vercel.app'
+const FACILITATOR_URL = 'https://facilitator.primev.xyz'
 
 // ⚠️ CONFIGURE THESE:
 const AGENT_PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY as `0x${string}`

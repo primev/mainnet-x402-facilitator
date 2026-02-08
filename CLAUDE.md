@@ -87,9 +87,13 @@ Settlement uses FastRPC for preconfirmations:
 | Registry | Status | Reference |
 |----------|--------|-----------|
 | **ERC-8004 Identity** | Registered — Agent #23175 | [Etherscan NFT](https://etherscan.io/nft/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432/23175), [Tx](https://etherscan.io/tx/0xcfb8619663c3da8337aea5b9868bc7067ec4db2c26132141dce83819caa05415) |
-| **x402 Ecosystem** (coinbase/x402) | PR submitted | [PR #1114](https://github.com/coinbase/x402/pull/1114) |
-| **x402scan Explorer** (Merit-Systems/x402scan) | PR submitted | [PR #624](https://github.com/Merit-Systems/x402scan/pull/624) |
+| **x402 Ecosystem** (coinbase/x402) | PR open — URL updated to facilitator.primev.xyz | [PR #1114](https://github.com/coinbase/x402/pull/1114) |
+| **x402scan Explorer** (Merit-Systems/x402scan) | PR open — URL updated, VADE review issues already addressed | [PR #624](https://github.com/Merit-Systems/x402scan/pull/624) |
+| **awesome-x402** (xpaysh) | PR open — URL updated | [PR #11](https://github.com/xpaysh/awesome-x402/pull/11) |
+| **awesome-x402** (Merit-Systems) | PR open — URL updated | [PR #29](https://github.com/Merit-Systems/awesome-x402/pull/29) |
+| **awesome-erc8004** (sudeepb02) | PR open — no URL change needed | [PR #3](https://github.com/sudeepb02/awesome-erc8004/pull/3) |
 | **x402 Bazaar** | Enabled | `/supported` declares bazaar, `/discovery/resources` live |
+| **x402.watch Directory** | Blocked — Ethereum mainnet not supported yet | Contact: [t.me/x402watch](https://t.me/x402watch) or [x.com/bitfalls](https://x.com/bitfalls) to request Ethereum network addition |
 
 ## Next Steps
 
@@ -100,6 +104,7 @@ Settlement uses FastRPC for preconfirmations:
 ### Short-term
 - Monitor x402 ecosystem PR #1114 and x402scan PR #624 for reviewer feedback
 - Fund relay wallet gas tank if ETH runs low (~0.01 ETH remaining)
+- **x402.watch listing** — reach out via [t.me/x402watch](https://t.me/x402watch) or [x.com/bitfalls](https://x.com/bitfalls) to request Ethereum mainnet as a supported network; once added, submit facilitator as "Primev – Ethereum Mainnet with Preconfs" with URL `https://facilitator.primev.xyz`, relay address `0x488d87a9A88a6A878B3E7cf0bEece8984af9518D`, 0% fee, public access, Bazaar enabled
 
 ### Medium-term — Visibility & Trust
 - **ERC-8004 Reputation Registry** — solicit feedback signals from early users/agents to build on-chain reputation for Agent #23175

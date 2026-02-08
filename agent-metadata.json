@@ -8,7 +8,7 @@
     "version": 2,
     "scheme": "exact",
     "network": "eip155:1",
-    "baseUrl": "https://x402-facilitator-gold.vercel.app",
+    "baseUrl": "https://facilitator.primev.xyz",
     "endpoints": {
       "verify": "/verify",
       "settle": "/settle",

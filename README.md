@@ -30,6 +30,8 @@ https://facilitator.primev.xyz
 
 ## How It Works
 
+![Fastx402 Architecture](architecture.png)
+
 ```
 Agent                     Resource Server              Facilitator              FastRPC
   │                             │                           │                      │

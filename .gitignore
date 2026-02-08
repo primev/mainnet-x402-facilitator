@@ -17,3 +17,4 @@ api/.vercel/
 
 # OS
 .DS_Store
+.vercel

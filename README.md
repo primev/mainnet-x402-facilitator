@@ -1,6 +1,6 @@
 # Mainnet x402 Facilitator
 
-**First x402 facilitator on Ethereum mainnet. First to use preconfirmations for sub-second USDC settlement.**
+**First x402 facilitator on Ethereum mainnet to use preconfirmations for sub-second USDC settlement.**
 
 ## The Problem
 

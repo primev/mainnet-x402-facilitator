@@ -1,0 +1,12 @@
+{
+  "name": "@primev/claude-code-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./scripts/validate-plugin.mjs",
+    "typecheck": "node ./scripts/validate-plugin.mjs",
+    "test": "node ./scripts/validate-plugin.mjs",
+    "lint": "node ./scripts/validate-plugin.mjs"
+  }
+}

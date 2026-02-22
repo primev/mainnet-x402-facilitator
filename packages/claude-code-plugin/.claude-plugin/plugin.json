@@ -1,0 +1,18 @@
+{
+  "name": "primev-facilitator-plugin",
+  "version": "1.0.0",
+  "description": "Primev facilitator MCP tooling for verification and settlement workflows.",
+  "mcpServers": {
+    "primev-facilitator": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/../facilitator-mcp/dist/index.js"
+      ],
+      "env": {
+        "FACILITATOR_BASE_URL": "${FACILITATOR_BASE_URL}",
+        "FACILITATOR_TIMEOUT_MS": "${FACILITATOR_TIMEOUT_MS}",
+        "PRIMEV_ENABLE_SETTLE": "${PRIMEV_ENABLE_SETTLE}"
+      }
+    }
+  }
+}

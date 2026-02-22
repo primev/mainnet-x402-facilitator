@@ -2,7 +2,7 @@
  * Register the Primev FastRPC facilitator on the ERC-8004 Identity Registry.
  *
  * Usage:
- *   RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx register-erc8004.ts
+ *   RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx scripts/register-erc8004.ts
  */
 
 import { createWalletClient, createPublicClient, http, encodeFunctionData, toHex, parseAbi } from 'viem';

@@ -1,0 +1,25 @@
+{
+  "name": "primev-facilitator-openclaw",
+  "version": "1.0.0",
+  "description": "OpenClaw wrapper that launches the Primev MCP server over stdio.",
+  "entry": "dist/index.js",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "FACILITATOR_BASE_URL": {
+        "type": "string",
+        "default": "https://facilitator.primev.xyz"
+      },
+      "FACILITATOR_TIMEOUT_MS": {
+        "type": "integer",
+        "default": 10000,
+        "minimum": 1
+      },
+      "PRIMEV_ENABLE_SETTLE": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "additionalProperties": false
+  }
+}

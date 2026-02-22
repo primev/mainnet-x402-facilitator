@@ -1,11 +1,15 @@
 {
-  "name": "x402-facilitator-api",
+  "name": "@primev/facilitator-api",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc --noEmit",
     "dev": "vercel dev",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/**/*.test.ts",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "hono": "^4.4.0",
@@ -14,6 +18,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "ethers": "^6.16.0",
+    "tsx": "^4.19.3",
     "typescript": "^5.5.0",
     "vercel": "^39.0.0"
   }

@@ -150,14 +150,22 @@ app.use(paymentMiddleware({
 ## Development
 
 ```bash
-# Run tests
+# Install workspace dependencies
+pnpm install
+
+# Run build/typecheck/tests across workspace
+pnpm build
+pnpm typecheck
+pnpm test
+
+# Run facilitator API locally
+cd apps/facilitator-api && vercel dev
+
+# Deploy facilitator API
+cd apps/facilitator-api && vercel --prod
+
+# Run Foundry tests
 cd contracts && forge test -vvv
-
-# Local dev
-cd api && vercel dev
-
-# Deploy
-cd api && vercel --prod
 ```
 
 ### Environment Variables
@@ -166,18 +174,60 @@ cd api && vercel --prod
 |----------|-------------|
 | `RELAY_PRIVATE_KEY` | Hot wallet for settlement txs |
 | `RPC_URL` | Ethereum mainnet RPC |
+| `FACILITATOR_BASE_URL` | MCP/plugin facilitator target URL (default `https://facilitator.primev.xyz`) |
+| `FACILITATOR_TIMEOUT_MS` | MCP/plugin HTTP timeout in milliseconds (default `10000`) |
+| `PRIMEV_ENABLE_SETTLE` | Enables settlement MCP tool registration/usage (`true` by default) |
 
 ## Architecture
 
 ```
-api/
-├── index.ts      # Hono routes
-├── settle.ts     # FastRPC submission
-├── verify.ts     # EIP-712 signature verification
-├── config.ts     # USDC address, FastRPC URL
-├── types.ts      # x402 protocol types
-└── abi.ts        # USDC ABI
+apps/
+└── facilitator-api/           # Hono/Vercel facilitator API
+packages/
+├── facilitator-client/        # Typed HTTP client for facilitator endpoints
+├── facilitator-mcp/           # MCP stdio server (shared tool runtime)
+├── claude-code-plugin/        # Claude Code plugin wrapper + SKILL.md
+└── openclaw-plugin/           # OpenClaw plugin wrapper
+contracts/                     # Foundry tests and scripts (unchanged)
 ```
+
+## Plugin Wrappers
+
+### Claude Code
+
+```bash
+cd packages/claude-code-plugin
+pnpm test
+```
+
+Manifest path:
+- `packages/claude-code-plugin/.claude-plugin/plugin.json`
+
+Skill path:
+- `packages/claude-code-plugin/skills/primev-facilitator/SKILL.md`
+
+### OpenClaw
+
+```bash
+cd packages/openclaw-plugin
+pnpm build
+```
+
+Manifest path:
+- `packages/openclaw-plugin/openclaw.plugin.json`
+
+The OpenClaw wrapper spawns:
+- `packages/facilitator-mcp/dist/index.js`
+
+## MCP Tools
+
+- `primev_health()`
+- `primev_supported()`
+- `primev_discovery_resources({ limit?, offset? })`
+- `primev_verify_payment({ paymentPayload, paymentRequirements })`
+- `primev_settle_payment({ paymentPayload, paymentRequirements, confirm, reason })`
+
+`primev_settle_payment` requires `confirm: true` and a non-empty `reason`.
 
 ## Registry & Ecosystem Listings
 

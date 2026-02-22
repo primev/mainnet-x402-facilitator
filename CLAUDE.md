@@ -25,45 +25,69 @@ No custom smart contract. Calls USDC's native `transferWithAuthorization` direct
 
 | File | Purpose |
 |------|---------|
-| `api/index.ts` | Hono routes + Vercel handler |
-| `api/verify.ts` | EIP-712 sig verification, balance/nonce/time checks |
-| `api/settle.ts` | FastRPC settlement with `maxPriorityFeePerGas: 0` |
-| `api/types.ts` | x402 protocol types (PaymentPayload, PaymentRequirements) |
-| `api/config.ts` | Env vars, USDC address, FastRPC URL |
-| `api/abi.ts` | USDC ABI (transferWithAuthorization, balanceOf, authorizationState) |
-| `api/register-erc8004.ts` | Script to register on ERC-8004 Identity Registry |
-| `api/update-metadata.ts` | Script to update ERC-8004 metadata for Agent #23175 |
+| `apps/facilitator-api/index.ts` | Hono routes + Vercel handler |
+| `apps/facilitator-api/verify.ts` | EIP-712 sig verification, balance/nonce/time checks |
+| `apps/facilitator-api/settle.ts` | FastRPC settlement with `maxPriorityFeePerGas: 0` |
+| `apps/facilitator-api/types.ts` | x402 protocol types (PaymentPayload, PaymentRequirements) |
+| `apps/facilitator-api/config.ts` | Env vars, USDC address, FastRPC URL |
+| `apps/facilitator-api/abi.ts` | USDC ABI (transferWithAuthorization, balanceOf, authorizationState) |
+| `packages/facilitator-client/src/index.ts` | Typed HTTP client for facilitator endpoints |
+| `packages/facilitator-mcp/src/index.ts` | MCP server entrypoint over stdio |
+| `packages/openclaw-plugin/src/index.ts` | OpenClaw plugin wrapper that spawns MCP server |
+| `scripts/register-erc8004.ts` | Script to register on ERC-8004 Identity Registry |
+| `scripts/update-metadata.ts` | Script to update ERC-8004 metadata for Agent #23175 |
 | `agent-metadata.json` | Static copy of agent metadata |
 | `contracts/test/TransferWithAuth.t.sol` | Fork tests for EIP-3009 |
 
 ## Commands
 
 ```bash
+# Install dependencies
+pnpm install
+
+# Build/typecheck/test workspace
+pnpm build
+pnpm typecheck
+pnpm test
+
 # Fork tests
 cd contracts && MAINNET_RPC_URL=https://... forge test -vvv
 
 # Type check API
-cd api && npx tsc --noEmit
+cd apps/facilitator-api && npx tsc --noEmit
 
 # Local dev
-cd api && vercel dev
+cd apps/facilitator-api && vercel dev
 
 # Deploy
-cd api && vercel --prod
+cd apps/facilitator-api && vercel --prod
 
 # Register on ERC-8004 (already done — Agent #23175)
-cd api && RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx register-erc8004.ts
+RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx scripts/register-erc8004.ts
 
 # Update ERC-8004 metadata (edit METADATA values in script first)
-cd api && RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx update-metadata.ts
+RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx scripts/update-metadata.ts
 # Or update specific keys only:
-cd api && RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx update-metadata.ts settlement_count avg_latency_ms
+RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx scripts/update-metadata.ts settlement_count avg_latency_ms
 ```
+
+## MCP Tools
+
+- `primev_health()`
+- `primev_supported()`
+- `primev_discovery_resources({ limit?, offset? })`
+- `primev_verify_payment({ paymentPayload, paymentRequirements })`
+- `primev_settle_payment({ paymentPayload, paymentRequirements, confirm, reason })`
+
+`primev_settle_payment` enforces `confirm: true` and non-empty `reason`.
 
 ## Env Vars (Vercel)
 
 - `RELAY_PRIVATE_KEY` — hot wallet private key (needs mev-commit gas tank funded)
 - `RPC_URL` — Ethereum mainnet RPC for reads
+- `FACILITATOR_BASE_URL` — MCP/plugin facilitator target URL (default `https://facilitator.primev.xyz`)
+- `FACILITATOR_TIMEOUT_MS` — MCP/plugin HTTP timeout in milliseconds (default `10000`)
+- `PRIMEV_ENABLE_SETTLE` — enables settlement MCP tool (`true` by default)
 
 ## FastRPC Integration
 

@@ -4,9 +4,15 @@ contracts/cache/
 contracts/broadcast/
 
 # API
-api/node_modules/
-api/dist/
-api/.vercel/
+node_modules/
+apps/*/node_modules/
+packages/*/node_modules/
+apps/facilitator-api/dist/
+apps/facilitator-api/.vercel/
+packages/facilitator-client/dist/
+packages/facilitator-mcp/dist/
+packages/openclaw-plugin/dist/
+.turbo/
 
 # Env
 .env

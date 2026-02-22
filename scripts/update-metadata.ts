@@ -5,10 +5,10 @@
  * that 8004agents.ai and other explorers can read and display.
  *
  * Usage:
- *   RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx update-metadata.ts
+ *   RELAY_PRIVATE_KEY=0x... RPC_URL=https://... npx tsx scripts/update-metadata.ts
  *
  * Pass specific keys to update only those:
- *   npx tsx update-metadata.ts settlement_count avg_latency_ms
+ *   npx tsx scripts/update-metadata.ts settlement_count avg_latency_ms
  *
  * Or run with no args to update all fields.
  */
